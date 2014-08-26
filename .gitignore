@@ -1,0 +1,10 @@
+.idea/*
+.idea
+.gradle/*
+build/*
+*/build/*
+*.iml
+*/local.gradle
+/out/*
+/classes
+target

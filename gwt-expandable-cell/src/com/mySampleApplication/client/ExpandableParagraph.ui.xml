@@ -1,0 +1,13 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <g:VerticalPanel>
+        <g:cell width="350px">
+            <g:Label  ui:field="text"/>
+        </g:cell>
+        <g:cell>
+            <g:Button width="100%" ui:field="expander" text="expand"/>
+        </g:cell>
+    </g:VerticalPanel>
+
+</ui:UiBinder>

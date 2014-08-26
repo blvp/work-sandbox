@@ -1,0 +1,5 @@
+/rootContext/
+/news/about/123523/
+/news/about/comments/321/
+/news/current/456/
+/news/current/hot/654/

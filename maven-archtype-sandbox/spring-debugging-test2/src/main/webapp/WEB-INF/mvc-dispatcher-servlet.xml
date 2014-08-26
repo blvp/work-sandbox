@@ -1,0 +1,38 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <context:component-scan base-package="ru.dz.blvp"/>
+    <mvc:resources mapping="/resources/**" location="resources"/>
+    <mvc:annotation-driven/>
+    <bean id="beansWrapper" class="freemarker.ext.beans.BeansWrapper">
+        <property name="simpleMapWrapper" value="true"/>
+    </bean>
+
+    <bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPaths" value="/WEB-INF/pages/"/>
+        <property name="freemarkerVariables">
+            <map>
+                <entry key="objectWrapper" value-ref="beansWrapper"/>
+            </map>
+        </property>
+        <property name="freemarkerSettings">
+            <props>
+                <prop key="datetime_format">dd-MM-yyyy HH:mm:ss</prop>
+                <prop key="number_format">0.######</prop>
+                <prop key="default_encoding">UTF-8</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="viewClass" value="ru.dz.blvp.SimpleFreeMarkerView"/>
+        <property name="prefix" value=""/>
+        <property name="suffix" value=".ftl"/>
+    </bean>
+
+</beans>

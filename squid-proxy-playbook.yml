@@ -1,0 +1,89 @@
+---
+- name: Setup Squid HTTP/HTTPS proxy
+  hosts: proxy
+  become: true
+  vars:
+    proxy_port: 3128
+    proxy_user: proxyuser
+    proxy_password: "{{ proxy_password_plain }}"
+    allowed_cidrs:
+      - "0.0.0.0/0"  # restrict this to your IP in production
+
+  tasks:
+    - name: Install squid and apache2-utils (for htpasswd)
+      apt:
+        name:
+          - squid
+          - apache2-utils
+        state: present
+        update_cache: true
+
+    - name: Create htpasswd file
+      command: htpasswd -cb /etc/squid/passwd {{ proxy_user }} {{ proxy_password }}
+      changed_when: true
+
+    - name: Set htpasswd file permissions
+      file:
+        path: /etc/squid/passwd
+        owner: proxy
+        group: proxy
+        mode: "0640"
+
+    - name: Write squid config
+      copy:
+        dest: /etc/squid/squid.conf
+        content: |
+          # --- Auth ---
+          auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+          auth_param basic realm Proxy
+          acl authenticated proxy_auth REQUIRED
+
+          # --- ACLs ---
+          acl SSL_ports port 443
+          acl Safe_ports port 80
+          acl Safe_ports port 443
+          acl Safe_ports port 1025-65535
+          acl CONNECT method CONNECT
+          {% for cidr in allowed_cidrs %}
+          acl allowed_net src {{ cidr }}
+          {% endfor %}
+
+          # --- Access rules ---
+          http_access deny !Safe_ports
+          http_access deny CONNECT !SSL_ports
+          http_access allow authenticated allowed_net
+          http_access deny all
+
+          # --- Listener ---
+          http_port {{ proxy_port }}
+
+          # --- Logging ---
+          access_log daemon:/var/log/squid/access.log squid
+
+          # --- Tweaks ---
+          via off
+          forwarded_for delete
+          request_header_access X-Forwarded-For deny all
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart squid
+
+    - name: Allow proxy port through UFW
+      ufw:
+        rule: allow
+        port: "{{ proxy_port }}"
+        proto: tcp
+      when: ansible_facts.packages is defined
+
+    - name: Ensure squid is enabled and running
+      systemd:
+        name: squid
+        enabled: true
+        state: started
+
+  handlers:
+    - name: restart squid
+      systemd:
+        name: squid
+        state: restarted
